@@ -15,6 +15,7 @@ import {
   TaskInput
 } from "./styles";
 
+// Tratamento de erro
 const newCycleFormValidationSchema = zod.object({
   task: zod
     .string()
@@ -28,18 +29,20 @@ const newCycleFormValidationSchema = zod.object({
 // Extrai a tipagem do zod
 type NewCycleFormData = zod.infer<typeof newCycleFormValidationSchema>
 
+// Tipagem
 interface Cycle {
   id: string;
   task: string;
   minutesAmount: number;
   startDate: Date;
 }
-
+//sadafsf
 export function Home() {
   const [cycles, setCycles] = useState<Cycle[]>([]);
   const [activeCycleId, setActiveCycleId] = useState<string | null>(null);
   const [amountSecondsPassed, setAmountSecondsPassed] = useState(0);
 
+  // Cria o hook do reac-hook-form e inicializa com valores padrão 
   const { register, handleSubmit, watch, reset } = useForm<NewCycleFormData>({
     resolver: zodResolver(newCycleFormValidationSchema),
     defaultValues: {
@@ -48,15 +51,23 @@ export function Home() {
     }
   });
 
+  // Verifica qual é o ciclo ativo
   const activeCycle = cycles.find(cycle => cycle.id === activeCycleId);
 
+  // Executa sempre que activeCycle mudar
   useEffect(() => {
+    let interval: number;
+
     if (activeCycle) {
-      setInterval(() => {
+      interval = setInterval(() => {
         setAmountSecondsPassed(
           differenceInSeconds(new Date(), activeCycle.startDate),
         )
       }, 1000)
+    }
+
+    return () => {
+      clearInterval(interval);
     }
   }, [activeCycle])
 
@@ -72,12 +83,12 @@ export function Home() {
 
     setCycles(state => [...state, newCycle]);
     setActiveCycleId(id);
-
-    setCycles([...cycles, newCycle]);
+    setAmountSecondsPassed(0);
 
     reset();
   }
 
+  // Calculo necessário para formatarmos a hora em minutos e segundos
   const totalSeconds = activeCycle ? activeCycle.minutesAmount * 60 : 0;
   const currentSeconds = activeCycle ? totalSeconds - amountSecondsPassed : 0;
 
@@ -86,6 +97,13 @@ export function Home() {
 
   const minutes = String(minutesAmount).padStart(2, '0');
   const seconds = String(secondsAmount).padStart(2, '0');
+
+  // Imprime a hora no title da página
+  useEffect(() => {
+    if (activeCycle) {
+      document.title = `${minutes}: ${seconds}`
+    }
+  }, [minutes, seconds, activeCycle])
 
   console.log(activeCycle);
 
